@@ -1,0 +1,30 @@
+name: Auto-Save Database
+
+on:
+  push:
+    paths:
+      - 'database.json'  # Триггерим только при изменении этого файла
+
+jobs:
+  commit-changes:
+    runs-on: ubuntu-latest
+    
+    steps:
+      # Шаг 1: Получить код
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Нужно для работы с историей коммитов
+
+      # Шаг 2: Настроить Git
+      - name: Configure Git
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+
+      # Шаг 3: Зафиксировать изменения
+      - name: Commit changes
+        run: |
+          git add database.json
+          git commit -m "Auto-save database changes [skip ci]" || echo "Нет изменений для коммита"
+          git push
