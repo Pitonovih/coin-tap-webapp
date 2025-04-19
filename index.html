@@ -1,118 +1,48 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Coin Tap</title>
-  <style>
-    body {
-      background: linear-gradient(135deg, #6e8efb, #a777e3);
-      font-family: 'Arial', sans-serif;
-      text-align: center;
-      margin: 0;
-      padding: 0;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      user-select: none;
-    }
-    #coin {
-      width: 150px;
-      height: 150px;
-      background: radial-gradient(circle at 30% 30%, #ffd700, #daa520);
-      border-radius: 50%;
-      margin: 20px auto;
-      box-shadow: 0 0 30px rgba(255, 215, 0, 0.7);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 24px;
-      font-weight: bold;
-      transition: transform 0.1s;
-    }
-    #coin:active {
-      transform: scale(0.95);
-    }
-    #counter {
-      font-size: 36px;
-      color: white;
-      text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-    }
-    #top-players {
-      background: rgba(0,0,0,0.3);
-      color: white;
-      padding: 10px;
-      border-radius: 10px;
-      margin: 20px auto;
-      max-width: 80%;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <title>Coin Tap</title>
+    <style>
+        body { 
+            background: linear-gradient(135deg, #6e8efb, #a777e3);
+            text-align: center;
+            padding-top: 50px;
+        }
+        #coin {
+            width: 150px;
+            height: 150px;
+            background: gold;
+            border-radius: 50%;
+            margin: 30px auto;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
-  <div id="counter">0 монет</div>
-  <div id="coin">ТАП!</div>
-  
-  <div id="top-players">
-    <h3>Топ игроков</h3>
-    <div id="top-list">Загрузка...</div>
-  </div>
-
-  <!-- Звук тапа -->
-  <audio id="tapSound" src="https://assets.mixkit.co/sfx/preview/mixkit-coin-win-notification-1992.mp3"></audio>
-
-  <script>
-    let coins = 0;
-    const coin = document.getElementById('coin');
-    const counter = document.getElementById('counter');
-    const tapSound = document.getElementById('tapSound');
-    const topList = document.getElementById('top-list');
-
-    // Загружаем топ игроков
-    async function loadTopPlayers() {
-      try {
-        const response = await fetch('https://ваш-сервер.xyz/top');
-        const data = await response.json();
-        topList.innerHTML = data.map((user, i) => 
-          `${i+1}. ${user.name}: ${user.coins} монет`
-        ).join('<br>');
-      } catch (e) {
-        topList.innerHTML = 'Ошибка загрузки';
-      }
-    }
-
-    // Обработка тапа
-    coin.addEventListener('click', async () => {
-      coins++;
-      counter.textContent = coins + ' монет';
-      
-      // Анимация
-      coin.style.transform = 'scale(1.1)';
-      setTimeout(() => coin.style.transform = 'scale(1)', 100);
-      
-      // Звук и вибрация
-      tapSound.currentTime = 0;
-      tapSound.play();
-      if (navigator.vibrate) navigator.vibrate(50);
-      
-      // Сохраняем на сервер
-      if (window.Telegram?.WebApp) {
-        const user = Telegram.WebApp.initDataUnsafe.user;
-        await fetch('https://ваш-сервер.xyz/save', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            userId: user.id,
-            coins: coins,
-            firstName: user.first_name
-          })
+    <div id="counter">0 монет</div>
+    <div id="coin">ТАП!</div>
+    
+    <script>
+        let coins = 0;
+        
+        document.getElementById('coin').addEventListener('click', async () => {
+            coins++;
+            document.getElementById('counter').textContent = coins + ' монет';
+            
+            if (window.Telegram?.WebApp) {
+                const user = Telegram.WebApp.initDataUnsafe.user;
+                await fetch('https://ваш-сервер.xyz/save', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        userId: user.id,
+                        coins: coins,
+                        firstName: user.first_name
+                    })
+                });
+            }
         });
-      }
-    });
-
-    // Загружаем топ при старте
-    loadTopPlayers();
-  </script>
+    </script>
 </body>
 </html>
