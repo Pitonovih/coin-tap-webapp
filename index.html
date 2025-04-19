@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Coin Tap</title>
+  <style>
+    body {
+      background: linear-gradient(135deg, #6e8efb, #a777e3);
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      user-select: none;
+    }
+    #coin {
+      width: 150px;
+      height: 150px;
+      background: gold;
+      border-radius: 50%;
+      margin: 20px auto;
+      box-shadow: 0 0 30px yellow;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      font-weight: bold;
+      transition: transform 0.1s;
+    }
+    #coin:active {
+      transform: scale(0.95);
+    }
+    #counter {
+      font-size: 36px;
+      color: white;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+    #invite {
+      background: rgba(255,255,255,0.2);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 20px;
+      margin-top: 20px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div id="counter">0 монет</div>
+  <div id="coin">ТАП!</div>
+  <button id="invite">Пригласить друга</button>
+
+  <script>
+    let coins = 0;
+    const coin = document.getElementById('coin');
+    const counter = document.getElementById('counter');
+
+    // Анимация тапа
+    coin.addEventListener('click', () => {
+      coins++;
+      counter.textContent = coins + ' монет';
+      
+      // Эффект "полёта" монетки
+      coin.style.transform = 'scale(1.1)';
+      setTimeout(() => coin.style.transform = 'scale(1)', 100);
+      
+      // Вибрация (на мобильных)
+      if (navigator.vibrate) navigator.vibrate(50);
+      
+      // Отправляем данные в бота (если открыто в Telegram Web App)
+      if (window.Telegram?.WebApp) {
+        Telegram.WebApp.sendData(JSON.stringify({ coins }));
+      }
+    });
+
+    // Кнопка "Пригласить друга"
+    document.getElementById('invite').addEventListener('click', () => {
+      if (window.Telegram?.WebApp) {
+        Telegram.WebApp.shareUrl(
+          'https://t.me/YourBot?start=ref123',
+          'Получи 100 монет за друга!'
+        );
+      }
+    });
+  </script>
+</body>
+</html>
