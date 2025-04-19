@@ -7,7 +7,7 @@
   <style>
     body {
       background: linear-gradient(135deg, #6e8efb, #a777e3);
-      font-family: Arial, sans-serif;
+      font-family: 'Arial', sans-serif;
       text-align: center;
       margin: 0;
       padding: 0;
@@ -20,10 +20,10 @@
     #coin {
       width: 150px;
       height: 150px;
-      background: gold;
+      background: radial-gradient(circle at 30% 30%, #ffd700, #daa520);
       border-radius: 50%;
       margin: 20px auto;
-      box-shadow: 0 0 30px yellow;
+      box-shadow: 0 0 30px rgba(255, 215, 0, 0.7);
       cursor: pointer;
       display: flex;
       align-items: center;
@@ -40,54 +40,79 @@
       color: white;
       text-shadow: 0 2px 4px rgba(0,0,0,0.3);
     }
-    #invite {
-      background: rgba(255,255,255,0.2);
+    #top-players {
+      background: rgba(0,0,0,0.3);
       color: white;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 20px;
-      margin-top: 20px;
-      cursor: pointer;
+      padding: 10px;
+      border-radius: 10px;
+      margin: 20px auto;
+      max-width: 80%;
     }
   </style>
 </head>
 <body>
   <div id="counter">0 монет</div>
   <div id="coin">ТАП!</div>
-  <button id="invite">Пригласить друга</button>
+  
+  <div id="top-players">
+    <h3>Топ игроков</h3>
+    <div id="top-list">Загрузка...</div>
+  </div>
+
+  <!-- Звук тапа -->
+  <audio id="tapSound" src="https://assets.mixkit.co/sfx/preview/mixkit-coin-win-notification-1992.mp3"></audio>
 
   <script>
     let coins = 0;
     const coin = document.getElementById('coin');
     const counter = document.getElementById('counter');
+    const tapSound = document.getElementById('tapSound');
+    const topList = document.getElementById('top-list');
 
-    // Анимация тапа
-    coin.addEventListener('click', () => {
+    // Загружаем топ игроков
+    async function loadTopPlayers() {
+      try {
+        const response = await fetch('https://ваш-сервер.xyz/top');
+        const data = await response.json();
+        topList.innerHTML = data.map((user, i) => 
+          `${i+1}. ${user.name}: ${user.coins} монет`
+        ).join('<br>');
+      } catch (e) {
+        topList.innerHTML = 'Ошибка загрузки';
+      }
+    }
+
+    // Обработка тапа
+    coin.addEventListener('click', async () => {
       coins++;
       counter.textContent = coins + ' монет';
       
-      // Эффект "полёта" монетки
+      // Анимация
       coin.style.transform = 'scale(1.1)';
       setTimeout(() => coin.style.transform = 'scale(1)', 100);
       
-      // Вибрация (на мобильных)
+      // Звук и вибрация
+      tapSound.currentTime = 0;
+      tapSound.play();
       if (navigator.vibrate) navigator.vibrate(50);
       
-      // Отправляем данные в бота (если открыто в Telegram Web App)
+      // Сохраняем на сервер
       if (window.Telegram?.WebApp) {
-        Telegram.WebApp.sendData(JSON.stringify({ coins }));
+        const user = Telegram.WebApp.initDataUnsafe.user;
+        await fetch('https://ваш-сервер.xyz/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: user.id,
+            coins: coins,
+            firstName: user.first_name
+          })
+        });
       }
     });
 
-    // Кнопка "Пригласить друга"
-    document.getElementById('invite').addEventListener('click', () => {
-      if (window.Telegram?.WebApp) {
-        Telegram.WebApp.shareUrl(
-          'https://t.me/YourBot?start=ref123',
-          'Получи 100 монет за друга!'
-        );
-      }
-    });
+    // Загружаем топ при старте
+    loadTopPlayers();
   </script>
 </body>
 </html>
